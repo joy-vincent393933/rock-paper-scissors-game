@@ -29,9 +29,7 @@ This project demonstrates structured game flow, clean UI/UX, and turn-based play
 ## ▶️ Live Demo
 
 🔗 **Live Game:**  
-https://your-username.github.io/rock-paper-scissors-game/
-
-*(Replace `your-username` with your GitHub username)*
+https://joy-vincent393933.github.io/rock-paper-scissors-game/
 
 ---
 
