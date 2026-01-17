@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Rock Paper Scissors – Scene Based Game</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  background: linear-gradient(135deg,#141e30,#243b55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+}
+
+#app {
+  width: 420px;
+  background: rgba(0,0,0,0.45);
+  padding: 24px;
+  border-radius: 18px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+}
+
+.scene { animation: fade 0.4s ease; }
+.hidden { display: none; }
+
+h1,h2 { margin-top: 0; }
+p { font-size: 14px; line-height: 1.5; }
+
+button {
+  margin-top: 14px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: gold;
+  font-size: 15px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: none;
+}
+
+.card {
+  background: rgba(255,255,255,0.08);
+  padding: 12px;
+  border-radius: 12px;
+  margin-top: 12px;
+}
+
+.turn-box {
+  text-align: center;
+  padding: 12px;
+  background: rgba(255,215,0,0.25);
+  border-radius: 12px;
+  font-weight: bold;
+}
+
+.players {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.player {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  text-align: center;
+}
+
+.player.active {
+  background: rgba(255,215,0,0.3);
+}
+
+.choices {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.choice {
+  width: 72px;
+  height: 72px;
+  font-size: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.15);
+  cursor: pointer;
+}
+
+.choice:hover { background: gold; }
+
+.result, .reveal {
+  margin-top: 16px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* ---------- ROUND UI ---------- */
+.round-wrapper {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.round-label {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-bottom: 6px;
+}
+
+.round-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.round-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+}
+
+.round-dot.active {
+  background: gold;
+  box-shadow: 0 0 6px gold;
+}
+
+.round-dot.completed {
+  background: rgba(255,255,255,0.8);
+}
+
+@keyframes fade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+<!-- SCENE 0 : INTRO -->
+<section class="scene" id="scene-intro">
+  <h1>🪨📄✂️</h1>
+  <h2>Rock Paper Scissors</h2>
+  <p>Scene-based turn strategy game</p>
+  <button onclick="showScene('rules')">Start</button>
+</section>
+
+<!-- SCENE 1 : RULES -->
+<section class="scene hidden" id="scene-rules">
+  <h2>Scene 1 – Rules & How to Play</h2>
+
+  <div class="card">
+    <strong>Objective</strong>
+    <p>Defeat your opponent by choosing the stronger move.</p>
+  </div>
+
+  <div class="card">
+    <strong>Rules</strong>
+    <p>
+      Rock beats Scissors<br>
+      Scissors beats Paper<br>
+      Paper beats Rock
+    </p>
+  </div>
+
+  <div class="card">
+    <strong>Turn Manner</strong>
+    <p>
+      Player 1 chooses secretly → confirms<br>
+      Player 2 chooses → confirms<br>
+      Result revealed together
+    </p>
+  </div>
+
+  <button onclick="showScene('mode')">OK, Continue</button>
+</section>
+
+<!-- SCENE 2 : MODE -->
+<section class="scene hidden" id="scene-mode">
+  <h2>Scene 2 – Game Mode</h2>
+  <div class="card">
+    <p>👥 Local Two-Player (Same Device)</p>
+    <button onclick="showScene('setup')">Select Mode</button>
+  </div>
+</section>
+
+<!-- SCENE 3 : PLAYER SETUP -->
+<section class="scene hidden" id="scene-setup">
+  <h2>Scene 3 – Player Setup</h2>
+  <input id="p1Name" placeholder="Player One Name">
+  <input id="p2Name" placeholder="Player Two Name">
+  <button onclick="startGame()">Start Game</button>
+</section>
+
+<!-- SCENE 4 : GAMEPLAY -->
+<section class="scene hidden" id="scene-game">
+  <h2>Scene 4 – Gameplay</h2>
+
+  <!-- ROUND UI -->
+  <div class="round-wrapper">
+    <div class="round-label">
+      Match <span id="currentRound">1</span> / 6
+    </div>
+    <div class="round-dots" id="roundDots"></div>
+  </div>
+
+  <div class="turn-box" id="turnText"></div>
+
+  <div class="players">
+    <div class="player active" id="p0"></div>
+    <div class="player" id="p1"></div>
+  </div>
+
+  <div class="choices">
+    <button class="choice" data-choice="rock">🪨</button>
+    <button class="choice" data-choice="paper">📄</button>
+    <button class="choice" data-choice="scissors">✂️</button>
+  </div>
+
+  <button id="confirmBtn" disabled onclick="confirmMove()">Confirm Move</button>
+
+  <div class="reveal" id="reveal"></div>
+  <div class="result" id="result"></div>
+</section>
+
+<!-- SCENE 6 : SUMMARY -->
+<section class="scene hidden" id="scene-summary">
+  <h2>Scene 6 – Match Summary</h2>
+  <p id="summaryText"></p>
+  <button onclick="resetGame()">Restart Game</button>
+</section>
+
+</div>
+
+<script>
+const state = {
+  players: ["",""],
+  current: 0,
+  selected: null,
+  moves: [],
+  totalRounds: 6,
+  currentRound: 1
+};
+
+function showScene(name) {
+  document.querySelectorAll(".scene").forEach(s => s.classList.add("hidden"));
+  document.getElementById("scene-" + name).classList.remove("hidden");
+}
+
+function startGame() {
+  state.players[0] = p1Name.value || "Player 1";
+  state.players[1] = p2Name.value || "Player 2";
+  p0.textContent = state.players[0];
+  p1.textContent = state.players[1];
+  state.currentRound = 1;
+  renderRounds();
+  updateTurn();
+  showScene("game");
+}
+
+function updateTurn() {
+  turnText.textContent = state.players[state.current] + "'s Turn";
+  p0.className = "player" + (state.current === 0 ? " active" : "");
+  p1.className = "player" + (state.current === 1 ? " active" : "");
+}
+
+document.querySelectorAll(".choice").forEach(btn => {
+  btn.onclick = () => {
+    state.selected = btn.dataset.choice;
+    confirmBtn.disabled = false;
+  };
+});
+
+function confirmMove() {
+  state.moves[state.current] = state.selected;
+  state.selected = null;
+  confirmBtn.disabled = true;
+
+  if (state.moves.length === 2) {
+    revealRound();
+  } else {
+    state.current = 1;
+    updateTurn();
+  }
+}
+
+function revealRound() {
+  const rules = { rock:"scissors", paper:"rock", scissors:"paper" };
+  const [a,b] = state.moves;
+
+  reveal.textContent = a + " vs " + b;
+
+  let winnerText = "Draw!";
+  if (a !== b) {
+    winnerText = rules[a] === b ? state.players[0] + " Wins!" : state.players[1] + " Wins!";
+  }
+
+  result.textContent = winnerText;
+
+  setTimeout(() => {
+    state.currentRound++;
+    if (state.currentRound > state.totalRounds) {
+      summaryText.textContent = winnerText;
+      showScene("summary");
+      return;
+    }
+    state.moves = [];
+    state.current = 0;
+    renderRounds();
+    reveal.textContent = "";
+    result.textContent = "";
+    updateTurn();
+  }, 1500);
+}
+
+function renderRounds() {
+  currentRound.textContent = state.currentRound;
+  roundDots.innerHTML = "";
+
+  for (let i = 1; i <= state.totalRounds; i++) {
+    const dot = document.createElement("div");
+    dot.className = "round-dot";
+    if (i < state.currentRound) dot.classList.add("completed");
+    if (i === state.currentRound) dot.classList.add("active");
+    roundDots.appendChild(dot);
+  }
+}
+
+function resetGame() {
+  state.current = 0;
+  state.moves = [];
+  state.currentRound = 1;
+  showScene("intro");
+}
+
+showScene("intro");
+</script>
+
+</body>
+</html>
